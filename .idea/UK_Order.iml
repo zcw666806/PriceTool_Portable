@@ -6,6 +6,10 @@
       <sourceFolder url="file://$MODULE_DIR$/PriceTool_Portable/python-3.13.5-embed-amd64" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/PriceTool_Portable/python/Lib/site-packages" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/PriceTool_Portable/data" />
+      <excludeFolder url="file://$MODULE_DIR$/PriceTool_Portable/logs" />
+      <excludeFolder url="file://$MODULE_DIR$/PriceTool_Portable/output" />
+      <excludeFolder url="file://$MODULE_DIR$/PriceTool_Portable/temp" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.13 (UK_Order) (2)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
