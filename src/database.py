@@ -264,7 +264,6 @@ def build_price_where(filters: dict | None = None) -> tuple[str, list]:
         "tier",
         "cover_range",
         "size",
-        "source_type",
         "price_basis",
     ]
     for field in exact_fields:
@@ -280,6 +279,11 @@ def build_price_where(filters: dict | None = None) -> tuple[str, list]:
             "(product_code LIKE ? OR product_name LIKE ? OR cover_range LIKE ? OR size LIKE ? OR source_file LIKE ?)"
         )
         params.extend([like] * 5)
+
+    source_file = filters.get("source_file")
+    if source_file:
+        where.append("source_file LIKE ?")
+        params.append(f"%{source_file}%")
 
     if filters.get("needs_review") is not None:
         where.append("needs_review = ?")

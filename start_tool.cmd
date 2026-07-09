@@ -18,6 +18,10 @@ if exist "%BASE_DIR%python\python.exe" (
   set "PYTHONHOME=%BASE_DIR%python"
   set "PYTHONPATH=%BASE_DIR%;%BASE_DIR%app;%BASE_DIR%python\Lib\site-packages"
   "%BASE_DIR%python\python.exe" "%BASE_DIR%launcher.py"
+) else if exist "%BASE_DIR%runtime\python\python.exe" (
+  set "PYTHONHOME=%BASE_DIR%runtime\python"
+  set "PYTHONPATH=%BASE_DIR%;%BASE_DIR%app;%BASE_DIR%runtime\python\Lib\site-packages"
+  "%BASE_DIR%runtime\python\python.exe" "%BASE_DIR%launcher.py"
 ) else (
   python "%BASE_DIR%launcher.py"
 )

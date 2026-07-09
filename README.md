@@ -11,7 +11,7 @@ pip install -r requirements-dev.txt
 streamlit run app\streamlit_app.py --server.address 127.0.0.1 --server.port 8501
 ```
 
-也可以双击 `启动工具.bat`。
+也可以双击 `start_tool.cmd`。如果在便携包内运行，脚本会使用包内 `python/`；如果在开发目录运行，脚本会使用 `runtime/python/`。
 
 ## 核心目录
 
@@ -24,4 +24,4 @@ streamlit run app\streamlit_app.py --server.address 127.0.0.1 --server.port 8501
 
 ## 便携构建
 
-运行 `build_portable.bat` 生成 `PriceTool_Portable/` 骨架，再将 Windows embeddable Python 解压到 `PriceTool_Portable/python/`，并安装 `requirements-portable.txt` 到 `python/Lib/site-packages`。
+运行 `package_release.cmd` 直接生成便携 zip。脚本会从 `runtime/python/` 复制已安装依赖的嵌入式 Python，不再需要长期维护 `PriceTool_Portable/` 目录。

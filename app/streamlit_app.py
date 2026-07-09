@@ -28,12 +28,117 @@ st.set_page_config(page_title="UK Order 价格查询", layout="wide")
 st.markdown(
     """
     <style>
-    .block-container { padding-top: 1.4rem; }
+    header[data-testid="stHeader"],
+    div[data-testid="stToolbar"],
+    div[data-testid="stDecoration"],
+    #MainMenu,
+    footer {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+    }
+    .block-container {
+        padding-top: 0.85rem;
+        padding-bottom: 0.7rem;
+    }
+    h1 {
+        font-size: 1.85rem !important;
+        line-height: 2.2rem !important;
+        margin: 0 0 0.7rem 0 !important;
+        padding: 0 !important;
+    }
     div[data-testid="stMetric"] {
         background: #f6f8fb;
         border: 1px solid #e5e7eb;
         border-radius: 8px;
-        padding: 12px 14px;
+        padding: 8px 12px;
+    }
+    div[data-testid="stMetric"] label {
+        font-size: 0.82rem !important;
+    }
+    div[data-testid="stMetricValue"] {
+        font-size: 1.6rem !important;
+        line-height: 1.85rem !important;
+    }
+    div[data-testid="stVerticalBlock"] {
+        gap: 0.55rem;
+    }
+    div[data-testid="stTabs"] [data-baseweb="tab-list"] {
+        gap: 0.35rem;
+        min-height: 34px;
+    }
+    div[data-testid="stTabs"] [data-baseweb="tab"] {
+        height: 34px;
+        padding: 0 0.45rem;
+    }
+    div[data-testid="stCaptionContainer"] {
+        font-size: 0.82rem;
+    }
+    div[data-testid="stTextInput"] label {
+        font-size: 0.82rem;
+        margin-bottom: 0.15rem;
+    }
+    div[data-testid="stTextInput"] input {
+        min-height: 32px;
+        height: 32px;
+        font-size: 0.88rem;
+        border-radius: 6px;
+    }
+    div[data-testid="stCheckbox"] {
+        margin-top: -0.15rem;
+    }
+    .pagination-divider {
+        border-top: 1px solid #e5e7eb;
+        margin: 7px 0 6px 0;
+    }
+    .pagination-summary {
+        color: #6b7280;
+        font-size: 0.9rem;
+        line-height: 2.05rem;
+        white-space: nowrap;
+    }
+    .pagination-label {
+        color: #374151;
+        font-size: 0.86rem;
+        line-height: 2.05rem;
+        white-space: nowrap;
+    }
+    .pagination-total {
+        color: #6b7280;
+        font-size: 0.86rem;
+        line-height: 2.05rem;
+        white-space: nowrap;
+    }
+    div[data-testid="stSelectbox"] label,
+    div[data-testid="stNumberInput"] label {
+        display: none;
+    }
+    div[data-testid="stSelectbox"] div[data-baseweb="select"] > div {
+        min-height: 32px;
+        height: 32px;
+        font-size: 0.88rem;
+        border-radius: 6px;
+    }
+    div[data-testid="stNumberInput"] input {
+        min-height: 32px;
+        height: 32px;
+        font-size: 0.88rem;
+        border-radius: 6px;
+        text-align: center;
+    }
+    div[data-testid="stNumberInput"] button {
+        min-height: 16px;
+        height: 16px;
+    }
+    div[data-testid="stButton"] > button {
+        min-height: 32px;
+        height: 32px;
+        padding: 0 8px;
+        border-radius: 6px;
+        font-size: 1rem;
+    }
+    div[data-testid="stDataFrame"] {
+        margin-top: 0.15rem;
     }
     </style>
     """,
@@ -44,7 +149,6 @@ st.markdown(
 def main() -> None:
     config = load_config()
     st.title("UK Order 价格查询")
-    st.caption("本工具用于本地识别 PDF 价格表，并可选合并业务 Excel，所有数据都保存在当前工具目录内。")
 
     default_pdf = config.get("default_pdf_folder", "")
 
@@ -221,44 +325,104 @@ def save_uploaded_excels(uploaded_excels: list) -> list[str]:
 
 
 def render_query_tab() -> None:
-    st.caption("按条件查询已导入的价格。留空表示不过滤。")
-    filters = render_filters(prefix="query")
-    st.session_state["last_filters"] = filters
-    rows, total, page, total_pages, page_size = get_paginated_prices("query", filters)
-    st.caption(f"共 {total:,} 行，当前第 {page:,} / {total_pages:,} 页，每页 {page_size:,} 行。")
-    render_price_table(rows)
+    st.caption("按条件查询已导入的价格。多个筛选条件之间是“同时满足”的交集逻辑。")
+    filters = render_filter_panel(prefix="query")
+    applied_filters = st.session_state.get("query_applied_filters", {})
+    st.session_state["last_filters"] = applied_filters
+    render_paginated_price_table("query", applied_filters, empty_label="暂无数据")
 
 
 def render_review_tab() -> None:
     st.caption("这里集中显示建议人工确认的数据，方便回看来源文件。")
-    filters = render_filters(prefix="review")
-    filters["needs_review"] = True
-    rows, total, page, total_pages, page_size = get_paginated_prices("review", filters)
-    st.caption(f"待复核 {total:,} 行，当前第 {page:,} / {total_pages:,} 页，每页 {page_size:,} 行。")
-    render_price_table(rows)
+    filters = render_filter_panel(prefix="review")
+    applied_filters = dict(st.session_state.get("review_applied_filters", {}))
+    applied_filters["needs_review"] = True
+    render_paginated_price_table("review", applied_filters, empty_label="暂无待复核数据")
+
+
+def render_filter_panel(prefix: str) -> dict:
+    reset_key = f"{prefix}_reset_requested"
+    if st.session_state.pop(reset_key, False):
+        reset_filter_state(prefix)
+
+    filters = render_filters(prefix=prefix)
+    button_col_1, button_col_2, _ = st.columns([0.14, 0.14, 0.72])
+    if button_col_1.button("查询", type="primary", use_container_width=True, key=f"{prefix}_search_button"):
+        st.session_state[f"{prefix}_applied_filters"] = filters
+        st.session_state[f"{prefix}_page_value"] = 1
+        st.rerun()
+    if button_col_2.button("重置", use_container_width=True, key=f"{prefix}_reset_button"):
+        st.session_state[reset_key] = True
+        st.rerun()
+    return filters
+
+
+def reset_filter_state(prefix: str) -> None:
+    for field in ("keyword", "product_code", "tier", "size", "supplier", "currency", "cover_range", "source_file"):
+        st.session_state[f"{prefix}_{field}"] = ""
+    st.session_state[f"{prefix}_applied_filters"] = {}
+    st.session_state[f"{prefix}_page_value"] = 1
+
+
+def render_paginated_price_table(prefix: str, filters: dict, empty_label: str) -> None:
+    rows, total, page, total_pages, page_size = get_paginated_prices(prefix, filters)
+    render_price_table(rows, empty_label=empty_label)
+    render_pagination_footer(prefix, total, page, total_pages, page_size)
 
 
 def get_paginated_prices(prefix: str, filters: dict) -> tuple[list[dict], int, int, int, int]:
     total = get_price_count(filters=filters)
-    control_col_1, control_col_2, _ = st.columns([0.18, 0.18, 0.64])
-    page_size = control_col_1.selectbox(
-        "每页行数",
-        [100, 200, 500, 1000],
-        index=1,
-        key=f"{prefix}_page_size",
-    )
+    page_size = int(st.session_state.get(f"{prefix}_page_size_value", 20))
     total_pages = max((total + page_size - 1) // page_size, 1)
-    page = control_col_2.number_input(
+    page = min(int(st.session_state.get(f"{prefix}_page_value", 1)), total_pages)
+    offset = (page - 1) * page_size
+    rows = get_prices(filters=filters, limit=page_size, offset=offset)
+    return rows, total, page, total_pages, page_size
+
+
+def render_pagination_footer(prefix: str, total: int, page: int, total_pages: int, page_size: int) -> None:
+    st.markdown('<div class="pagination-divider"></div>', unsafe_allow_html=True)
+    info_col, spacer_col, label_col, size_col, prev_col, page_col, total_col, next_col = st.columns(
+        [0.25, 0.50, 0.055, 0.065, 0.032, 0.052, 0.032, 0.032],
+        gap="small",
+    )
+    info_col.markdown(
+        f'<div class="pagination-summary">共 {total:,} 行｜第 {page:,} / {total_pages:,} 页</div>',
+        unsafe_allow_html=True,
+    )
+    spacer_col.empty()
+    label_col.markdown('<div class="pagination-label">每页行数</div>', unsafe_allow_html=True)
+    page_size_options = [20, 50, 100, 200, 500, 1000]
+    selected_page_size = size_col.selectbox(
+        "每页行数",
+        page_size_options,
+        index=page_size_options.index(page_size) if page_size in page_size_options else 1,
+        key=f"{prefix}_page_size_input",
+        label_visibility="collapsed",
+    )
+    if prev_col.button("‹", help="上一页", use_container_width=True, disabled=page <= 1, key=f"{prefix}_prev_page"):
+        st.session_state[f"{prefix}_page_value"] = max(page - 1, 1)
+        st.rerun()
+    selected_page = page_col.number_input(
         "页码",
         min_value=1,
         max_value=total_pages,
-        value=min(st.session_state.get(f"{prefix}_page", 1), total_pages),
+        value=page,
         step=1,
-        key=f"{prefix}_page",
+        key=f"{prefix}_page_input",
+        label_visibility="collapsed",
     )
-    offset = (int(page) - 1) * page_size
-    rows = get_prices(filters=filters, limit=page_size, offset=offset)
-    return rows, total, int(page), total_pages, page_size
+    total_col.markdown(f'<div class="pagination-total">/ {total_pages:,}</div>', unsafe_allow_html=True)
+    if int(selected_page_size) != int(page_size):
+        st.session_state[f"{prefix}_page_size_value"] = int(selected_page_size)
+        st.session_state[f"{prefix}_page_value"] = 1
+        st.rerun()
+    if int(selected_page) != int(page):
+        st.session_state[f"{prefix}_page_value"] = int(selected_page)
+        st.rerun()
+    if next_col.button("›", help="下一页", use_container_width=True, disabled=page >= total_pages, key=f"{prefix}_next_page"):
+        st.session_state[f"{prefix}_page_value"] = min(page + 1, total_pages)
+        st.rerun()
 
 
 def render_sources_tab() -> None:
@@ -302,7 +466,7 @@ def render_filters(prefix: str) -> dict:
     supplier = fifth.text_input("Supplier", key=f"{prefix}_supplier")
     currency = sixth.text_input("Currency", key=f"{prefix}_currency")
     cover_range = seventh.text_input("Cover Range", key=f"{prefix}_cover_range")
-    source_type = eighth.selectbox("Source Type", ["", "PDF", "FOB_EXCEL", "EZ_EXCEL", "CIF_EXCEL", "FV_EXCEL"], key=f"{prefix}_source_type")
+    source_file = eighth.text_input("来源文件", key=f"{prefix}_source_file", help="支持输入部分文件名，例如 Verona、FOB、Sterling。")
 
     return {
         "keyword": keyword.strip(),
@@ -312,13 +476,13 @@ def render_filters(prefix: str) -> dict:
         "supplier": supplier.strip(),
         "currency": currency.strip(),
         "cover_range": cover_range.strip(),
-        "source_type": source_type.strip(),
+        "source_file": source_file.strip(),
     }
 
 
-def render_price_table(rows: list[dict]) -> None:
+def render_price_table(rows: list[dict], empty_label: str = "暂无数据") -> None:
     if not rows:
-        st.info("暂无数据")
+        st.info(empty_label)
         return
     df = pd.DataFrame(rows)
     preferred = [
@@ -341,7 +505,8 @@ def render_price_table(rows: list[dict]) -> None:
         "review_reason",
     ]
     columns = [col for col in preferred if col in df.columns]
-    st.dataframe(df[columns], use_container_width=True, hide_index=True)
+    table_height = min(max(34 * (len(df) + 1), 180), 440)
+    st.dataframe(df[columns], use_container_width=True, hide_index=True, height=table_height)
 
 
 if __name__ == "__main__":

@@ -5,6 +5,10 @@
       <sourceFolder url="file://$MODULE_DIR$/PriceTool_Portable/python" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/PriceTool_Portable/python-3.13.5-embed-amd64" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/PriceTool_Portable/python/Lib/site-packages" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/python" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/python/Lib/site-packages" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/runtime/python" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/runtime/python/Lib/site-packages" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/PriceTool_Portable/data" />
       <excludeFolder url="file://$MODULE_DIR$/PriceTool_Portable/logs" />

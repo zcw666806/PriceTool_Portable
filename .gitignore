@@ -4,6 +4,8 @@ __pycache__/
 .venv/
 venv/
 
+python/
+
 # Portable runtime
 PriceTool_Portable/python/
 PriceTool_Portable/get-pip.py
@@ -11,6 +13,7 @@ PriceTool_Portable/temp/
 PriceTool_Portable/logs/
 PriceTool_Portable/data/
 PriceTool_Portable/output/
+runtime/python/
 
 # Runtime data
 data/*.db

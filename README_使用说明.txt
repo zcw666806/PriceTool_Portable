@@ -100,17 +100,19 @@ temp/      上传文件临时目录
 
 C:\other\UK_Order
 
-不要手工同时修改 PriceTool_Portable 里的代码。需要发布便携版时，在项目根目录双击：
+项目根目录中的 runtime\python 是嵌入式 Python 运行底座。不要手工同时修改 PriceTool_Portable 里的代码；PriceTool_Portable 可以删除，它只是旧的中转/解压目录。
+
+需要发布便携版时，在项目根目录双击：
 
 package_release.cmd
 
 它会自动完成：
 
-1. 将最新 app、src、config、说明文档和启动脚本同步到 PriceTool_Portable。
-2. 保留 PriceTool_Portable\python 中已经安装好的嵌入式 Python。
+1. 从当前项目复制最新 app、src、config、说明文档和启动脚本。
+2. 从 runtime\python 复制已安装依赖的嵌入式 Python。
 3. 在 release_packages 文件夹生成新的 zip 包。
 4. 默认不把 data、logs、output、temp 中的运行数据打进 zip。
 
 如果需要指定输出目录，可在 PowerShell 中执行：
 
-powershell -NoProfile -ExecutionPolicy Bypass -File .\package_release.ps1 -TargetDir "D:\YourTarget\PriceTool_Portable"
+powershell -NoProfile -ExecutionPolicy Bypass -File .\package_release.ps1 -ZipDir "D:\YourReleaseFolder"
