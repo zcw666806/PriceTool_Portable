@@ -14,6 +14,7 @@ if str(ROOT) not in sys.path:
 from src.services import (  # noqa: E402
     export_current,
     get_dashboard_summary,
+    get_price_count,
     get_prices,
     get_table,
     load_config,
@@ -222,9 +223,9 @@ def save_uploaded_excels(uploaded_excels: list) -> list[str]:
 def render_query_tab() -> None:
     st.caption("按条件查询已导入的价格。留空表示不过滤。")
     filters = render_filters(prefix="query")
-    rows = get_prices(filters=filters, limit=1000)
     st.session_state["last_filters"] = filters
-    st.caption(f"当前显示 {len(rows):,} 行，最多显示 1,000 行")
+    rows, total, page, total_pages, page_size = get_paginated_prices("query", filters)
+    st.caption(f"共 {total:,} 行，当前第 {page:,} / {total_pages:,} 页，每页 {page_size:,} 行。")
     render_price_table(rows)
 
 
@@ -232,9 +233,32 @@ def render_review_tab() -> None:
     st.caption("这里集中显示建议人工确认的数据，方便回看来源文件。")
     filters = render_filters(prefix="review")
     filters["needs_review"] = True
-    rows = get_prices(filters=filters, limit=1000)
-    st.caption(f"待复核 {len(rows):,} 行，最多显示 1,000 行")
+    rows, total, page, total_pages, page_size = get_paginated_prices("review", filters)
+    st.caption(f"待复核 {total:,} 行，当前第 {page:,} / {total_pages:,} 页，每页 {page_size:,} 行。")
     render_price_table(rows)
+
+
+def get_paginated_prices(prefix: str, filters: dict) -> tuple[list[dict], int, int, int, int]:
+    total = get_price_count(filters=filters)
+    control_col_1, control_col_2, _ = st.columns([0.18, 0.18, 0.64])
+    page_size = control_col_1.selectbox(
+        "每页行数",
+        [100, 200, 500, 1000],
+        index=1,
+        key=f"{prefix}_page_size",
+    )
+    total_pages = max((total + page_size - 1) // page_size, 1)
+    page = control_col_2.number_input(
+        "页码",
+        min_value=1,
+        max_value=total_pages,
+        value=min(st.session_state.get(f"{prefix}_page", 1), total_pages),
+        step=1,
+        key=f"{prefix}_page",
+    )
+    offset = (int(page) - 1) * page_size
+    rows = get_prices(filters=filters, limit=page_size, offset=offset)
+    return rows, total, int(page), total_pages, page_size
 
 
 def render_sources_tab() -> None:

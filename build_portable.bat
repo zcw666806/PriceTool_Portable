@@ -3,6 +3,13 @@ setlocal
 set BASE_DIR=%~dp0
 set TARGET=%BASE_DIR%PriceTool_Portable
 
+echo This legacy script rebuilds the portable folder from scratch.
+echo It may delete the existing embedded Python folder.
+echo.
+echo Recommended: use package_release.cmd for normal releases.
+echo.
+pause
+
 if exist "%TARGET%" rmdir /s /q "%TARGET%"
 mkdir "%TARGET%"
 

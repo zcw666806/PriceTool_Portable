@@ -249,7 +249,7 @@ def insert_colour_reference(conn: sqlite3.Connection, rows: Iterable[dict]) -> i
     return len(rows)
 
 
-def query_prices(conn: sqlite3.Connection, filters: dict | None = None, limit: int | None = 500, offset: int = 0) -> list[dict]:
+def build_price_where(filters: dict | None = None) -> tuple[str, list]:
     filters = filters or {}
     where = []
     params = []
@@ -292,9 +292,13 @@ def query_prices(conn: sqlite3.Connection, filters: dict | None = None, limit: i
         where.append("price <= ?")
         params.append(float(filters["max_price"]))
 
+    return (" WHERE " + " AND ".join(where)) if where else "", params
+
+
+def query_prices(conn: sqlite3.Connection, filters: dict | None = None, limit: int | None = 500, offset: int = 0) -> list[dict]:
+    where_sql, params = build_price_where(filters)
     sql = "SELECT * FROM prices"
-    if where:
-        sql += " WHERE " + " AND ".join(where)
+    sql += where_sql
     sql += " ORDER BY product_code, product_name, tier, cover_range, size"
     if limit:
         sql += " LIMIT ? OFFSET ?"
@@ -315,7 +319,9 @@ def query_table(conn: sqlite3.Connection, table: str, limit: int | None = 500) -
 
 
 def count_prices(conn: sqlite3.Connection, filters: dict | None = None) -> int:
-    return len(query_prices(conn, filters=filters, limit=None))
+    where_sql, params = build_price_where(filters)
+    sql = "SELECT COUNT(*) FROM prices" + where_sql
+    return int(conn.execute(sql, params).fetchone()[0])
 
 
 def get_summary(conn: sqlite3.Connection) -> dict:

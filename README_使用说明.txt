@@ -92,3 +92,25 @@ data/      本地数据库
 output/    导出的 Excel
 logs/      启动和运行日志
 temp/      上传文件临时目录
+
+
+九、开发与打包发布
+
+日常开发只需要修改项目根目录：
+
+C:\other\UK_Order
+
+不要手工同时修改 PriceTool_Portable 里的代码。需要发布便携版时，在项目根目录双击：
+
+package_release.cmd
+
+它会自动完成：
+
+1. 将最新 app、src、config、说明文档和启动脚本同步到 PriceTool_Portable。
+2. 保留 PriceTool_Portable\python 中已经安装好的嵌入式 Python。
+3. 在 release_packages 文件夹生成新的 zip 包。
+4. 默认不把 data、logs、output、temp 中的运行数据打进 zip。
+
+如果需要指定输出目录，可在 PowerShell 中执行：
+
+powershell -NoProfile -ExecutionPolicy Bypass -File .\package_release.ps1 -TargetDir "D:\YourTarget\PriceTool_Portable"

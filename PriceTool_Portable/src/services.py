@@ -17,6 +17,7 @@ from .database import (
     insert_prices,
     insert_products,
     insert_source_file,
+    count_prices,
     query_prices,
     query_table,
 )
@@ -198,10 +199,23 @@ def start_import(
     return stats
 
 
-def get_prices(filters: dict | None = None, db_path: str | Path | None = None, limit: int | None = 500) -> list[dict]:
+def get_prices(
+    filters: dict | None = None,
+    db_path: str | Path | None = None,
+    limit: int | None = 500,
+    offset: int = 0,
+) -> list[dict]:
     conn = open_database(db_path)
     try:
-        return query_prices(conn, filters=filters or {}, limit=limit)
+        return query_prices(conn, filters=filters or {}, limit=limit, offset=offset)
+    finally:
+        conn.close()
+
+
+def get_price_count(filters: dict | None = None, db_path: str | Path | None = None) -> int:
+    conn = open_database(db_path)
+    try:
+        return count_prices(conn, filters=filters or {})
     finally:
         conn.close()
 

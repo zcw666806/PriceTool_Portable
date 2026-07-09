@@ -17,6 +17,7 @@ data/*.db
 logs/*
 output/*
 temp/
+release_packages/
 
 # Large source files
 *.zip
