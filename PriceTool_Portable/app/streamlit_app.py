@@ -43,6 +43,7 @@ st.markdown(
 def main() -> None:
     config = load_config()
     st.title("UK Order 价格查询")
+    st.caption("本工具用于本地识别 PDF 价格表，并可选合并业务 Excel，所有数据都保存在当前工具目录内。")
 
     default_pdf = config.get("default_pdf_folder", "")
 
@@ -75,10 +76,11 @@ def render_import_tab() -> None:
     _, center, _ = st.columns([0.16, 0.68, 0.16])
     with center:
         st.subheader("导入工作台")
+        st.caption("先选择 PDF 文件夹；Excel 是可选补充资料，不上传也可以直接识别 PDF。")
 
         folder_col, button_col = st.columns([0.72, 0.28], gap="small")
         with folder_col:
-            st.text_input("PDF 文件夹", value=st.session_state["pdf_folder"], disabled=True)
+            st.text_input("当前 PDF 文件夹", value=st.session_state["pdf_folder"], disabled=True)
         with button_col:
             st.write("")
             st.write("")
@@ -88,25 +90,31 @@ def render_import_tab() -> None:
                     st.session_state["pdf_folder"] = selected
                     st.rerun()
 
-        with st.expander("手动输入路径（备用）", expanded=False):
+        with st.expander("无法弹出选择窗口时，手动输入路径", expanded=False):
             manual_pdf_folder = st.text_input(
                 "PDF 文件夹路径",
                 value=st.session_state["pdf_folder"],
                 key="pdf_folder_manual",
+                help="例如：C:\\other\\UK_Order\\FOB 2026 JULY PRICE LIST",
             )
             if st.button("应用手动路径", use_container_width=True):
                 st.session_state["pdf_folder"] = manual_pdf_folder
                 st.rerun()
 
         uploaded_excels = st.file_uploader(
-            "可选 Excel 文件",
+            "可选 Excel 文件（可多选）",
             type=["xlsx", "xlsm", "xls"],
             accept_multiple_files=True,
+            help="可上传 FOB、EZ-LIVING、Sterling、FV 等业务价格表；不上传也可以继续。",
         )
-        clear_existing = st.checkbox("导入前清空旧数据", value=True)
+        clear_existing = st.checkbox(
+            "导入前清空旧数据",
+            value=True,
+            help="建议保持勾选，避免新旧资料混在一起。取消勾选时，新数据会追加到现有数据库。",
+        )
         action_col, preview_col = st.columns(2, gap="small")
-        start = action_col.button("开始识别", type="primary", use_container_width=True)
-        preview = preview_col.button("扫描文件名", use_container_width=True)
+        start = action_col.button("开始识别并汇总", type="primary", use_container_width=True)
+        preview = preview_col.button("先扫描文件名", use_container_width=True)
 
         if preview:
             show_preview(st.session_state["pdf_folder"])
@@ -118,7 +126,7 @@ def choose_pdf_folder(initial_folder: str) -> str | None:
     selected = choose_folder_with_powershell(initial_folder)
     if selected:
         return selected
-    st.warning("无法打开文件夹选择窗口，请使用“手动输入路径（备用）”。")
+    st.warning("没有打开文件夹选择窗口。可以展开“手动输入路径”后粘贴 PDF 文件夹路径。")
     return None
 
 
@@ -155,9 +163,10 @@ def show_preview(pdf_folder: str) -> None:
     try:
         rows = preview_pdf_folder(pdf_folder)
     except Exception as exc:  # noqa: BLE001
-        st.error(str(exc))
+        st.error(f"扫描失败：{exc}")
+        st.info("请确认选择的是已经解压后的 PDF 文件夹，而不是 zip 压缩包。")
         return
-    st.caption(f"共扫描到 {len(rows)} 个 PDF")
+    st.success(f"扫描完成，共找到 {len(rows)} 个 PDF。")
     st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
 
 
@@ -165,6 +174,7 @@ def run_import(pdf_folder: str, uploaded_excels: list | None, clear_existing: bo
     excel_files = save_uploaded_excels(uploaded_excels or [])
     progress = st.progress(0)
     status = st.empty()
+    status.write("正在准备导入，请稍候...")
 
     def progress_callback(index: int, total: int, name: str) -> None:
         progress.progress(index / max(total, 1))
@@ -178,7 +188,8 @@ def run_import(pdf_folder: str, uploaded_excels: list | None, clear_existing: bo
             progress_callback=progress_callback,
         )
     except Exception as exc:  # noqa: BLE001
-        st.error(str(exc))
+        st.error(f"导入失败：{exc}")
+        st.info("请先用“先扫描文件名”确认 PDF 文件夹是否正确；如果上传了 Excel，也请确认文件没有被其他程序占用。")
         return
 
     progress.progress(1.0)
@@ -187,7 +198,7 @@ def run_import(pdf_folder: str, uploaded_excels: list | None, clear_existing: bo
         f"已导入 {stats['pdf_files']} 个 PDF、{stats['excel_files']} 个 Excel，生成 {stats['price_rows']:,} 行价格数据。"
     )
     if stats.get("errors"):
-        st.warning("部分文件需要查看导入日志")
+        st.warning("部分文件未能导入，下面是需要查看的错误信息。")
         st.dataframe(pd.DataFrame({"error": stats["errors"]}), use_container_width=True, hide_index=True)
 
 
@@ -206,6 +217,7 @@ def save_uploaded_excels(uploaded_excels: list) -> list[str]:
 
 
 def render_query_tab() -> None:
+    st.caption("按条件查询已导入的价格。留空表示不过滤。")
     filters = render_filters(prefix="query")
     rows = get_prices(filters=filters, limit=1000)
     st.session_state["last_filters"] = filters
@@ -214,6 +226,7 @@ def render_query_tab() -> None:
 
 
 def render_review_tab() -> None:
+    st.caption("这里集中显示建议人工确认的数据，方便回看来源文件。")
     filters = render_filters(prefix="review")
     filters["needs_review"] = True
     rows = get_prices(filters=filters, limit=1000)
@@ -225,18 +238,21 @@ def render_sources_tab() -> None:
     sources = get_table("source_files", limit=1000)
     raw_pdf = get_table("pdf_extract_raw", limit=300)
     st.subheader("导入日志")
+    st.caption("查看每个来源文件是否导入成功，以及导入了多少行。")
     st.dataframe(pd.DataFrame(sources), use_container_width=True, hide_index=True)
     st.subheader("PDF 原始抽取预览")
+    st.caption("这里保留 PDF 原始识别内容，便于排查价格是否被拆行或错列。")
     st.dataframe(pd.DataFrame(raw_pdf), use_container_width=True, hide_index=True)
 
 
 def render_export_tab() -> None:
+    st.caption("导出文件会保存到 output 文件夹，也可以在页面上直接下载。")
     use_current_filter = st.checkbox("按当前查询条件导出", value=True)
     filters = st.session_state.get("last_filters", {}) if use_current_filter else {}
     if st.button("导出 Excel", type="primary"):
         try:
             path = export_current(filters=filters)
-            st.success(f"已导出：{path}")
+            st.success(f"导出完成：{path}")
             with open(path, "rb") as handle:
                 st.download_button(
                     "下载导出文件",
