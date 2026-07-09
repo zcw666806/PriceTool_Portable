@@ -282,8 +282,8 @@ def build_price_where(filters: dict | None = None) -> tuple[str, list]:
 
     source_file = filters.get("source_file")
     if source_file:
-        where.append("source_file LIKE ?")
-        params.append(f"%{source_file}%")
+        where.append("source_file = ?")
+        params.append(str(source_file))
 
     if filters.get("needs_review") is not None:
         where.append("needs_review = ?")
@@ -326,6 +326,17 @@ def count_prices(conn: sqlite3.Connection, filters: dict | None = None) -> int:
     where_sql, params = build_price_where(filters)
     sql = "SELECT COUNT(*) FROM prices" + where_sql
     return int(conn.execute(sql, params).fetchone()[0])
+
+
+def list_source_files(conn: sqlite3.Connection) -> list[str]:
+    sql = """
+        SELECT DISTINCT source_file
+        FROM prices
+        WHERE source_file IS NOT NULL
+          AND TRIM(source_file) <> ''
+        ORDER BY source_file
+    """
+    return [str(row[0]) for row in conn.execute(sql)]
 
 
 def get_summary(conn: sqlite3.Connection) -> dict:

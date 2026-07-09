@@ -16,6 +16,7 @@ from src.services import (  # noqa: E402
     get_dashboard_summary,
     get_price_count,
     get_prices,
+    get_source_file_options,
     get_table,
     load_config,
     preview_pdf_folder,
@@ -42,9 +43,9 @@ st.markdown(
         padding-bottom: 0.7rem;
     }
     h1 {
-        font-size: 1.85rem !important;
-        line-height: 2.2rem !important;
-        margin: 0 0 0.7rem 0 !important;
+        font-size: 2rem !important;
+        line-height: 2.7rem !important;
+        margin: 0 0 1rem 0 !important;
         padding: 0 !important;
     }
     div[data-testid="stMetric"] {
@@ -84,6 +85,10 @@ st.markdown(
         font-size: 0.88rem;
         border-radius: 6px;
     }
+    div[data-testid="stSelectbox"] label {
+        font-size: 0.82rem;
+        margin-bottom: 0.15rem;
+    }
     div[data-testid="stCheckbox"] {
         margin-top: -0.15rem;
     }
@@ -102,16 +107,13 @@ st.markdown(
         font-size: 0.86rem;
         line-height: 2.05rem;
         white-space: nowrap;
+        text-align: right;
     }
     .pagination-total {
         color: #6b7280;
         font-size: 0.86rem;
         line-height: 2.05rem;
         white-space: nowrap;
-    }
-    div[data-testid="stSelectbox"] label,
-    div[data-testid="stNumberInput"] label {
-        display: none;
     }
     div[data-testid="stSelectbox"] div[data-baseweb="select"] > div {
         min-height: 32px;
@@ -382,15 +384,15 @@ def get_paginated_prices(prefix: str, filters: dict) -> tuple[list[dict], int, i
 
 def render_pagination_footer(prefix: str, total: int, page: int, total_pages: int, page_size: int) -> None:
     st.markdown('<div class="pagination-divider"></div>', unsafe_allow_html=True)
-    info_col, spacer_col, label_col, size_col, prev_col, page_col, total_col, next_col = st.columns(
-        [0.25, 0.50, 0.055, 0.065, 0.032, 0.052, 0.032, 0.032],
+    info_col, spacer_left_col, label_col, size_col, prev_col, page_col, total_col, next_col, spacer_right_col = st.columns(
+        [0.22, 0.34, 0.055, 0.075, 0.035, 0.055, 0.035, 0.035, 0.15],
         gap="small",
     )
     info_col.markdown(
         f'<div class="pagination-summary">共 {total:,} 行｜第 {page:,} / {total_pages:,} 页</div>',
         unsafe_allow_html=True,
     )
-    spacer_col.empty()
+    spacer_left_col.empty()
     label_col.markdown('<div class="pagination-label">每页行数</div>', unsafe_allow_html=True)
     page_size_options = [20, 50, 100, 200, 500, 1000]
     selected_page_size = size_col.selectbox(
@@ -423,6 +425,7 @@ def render_pagination_footer(prefix: str, total: int, page: int, total_pages: in
     if next_col.button("›", help="下一页", use_container_width=True, disabled=page >= total_pages, key=f"{prefix}_next_page"):
         st.session_state[f"{prefix}_page_value"] = min(page + 1, total_pages)
         st.rerun()
+    spacer_right_col.empty()
 
 
 def render_sources_tab() -> None:
@@ -466,7 +469,17 @@ def render_filters(prefix: str) -> dict:
     supplier = fifth.text_input("Supplier", key=f"{prefix}_supplier")
     currency = sixth.text_input("Currency", key=f"{prefix}_currency")
     cover_range = seventh.text_input("Cover Range", key=f"{prefix}_cover_range")
-    source_file = eighth.text_input("来源文件", key=f"{prefix}_source_file", help="支持输入部分文件名，例如 Verona、FOB、Sterling。")
+    source_file_options = [""] + get_source_file_options()
+    source_file_key = f"{prefix}_source_file"
+    if st.session_state.get(source_file_key, "") not in source_file_options:
+        st.session_state[source_file_key] = ""
+    source_file = eighth.selectbox(
+        "来源文件",
+        source_file_options,
+        format_func=lambda value: "全部来源文件" if not value else value,
+        key=source_file_key,
+        help="选择已导入的来源文件，默认查询全部来源文件。",
+    )
 
     return {
         "keyword": keyword.strip(),

@@ -17,6 +17,7 @@ from .database import (
     insert_prices,
     insert_products,
     insert_source_file,
+    list_source_files,
     count_prices,
     query_prices,
     query_table,
@@ -216,6 +217,14 @@ def get_price_count(filters: dict | None = None, db_path: str | Path | None = No
     conn = open_database(db_path)
     try:
         return count_prices(conn, filters=filters or {})
+    finally:
+        conn.close()
+
+
+def get_source_file_options(db_path: str | Path | None = None) -> list[str]:
+    conn = open_database(db_path)
+    try:
+        return list_source_files(conn)
     finally:
         conn.close()
 
