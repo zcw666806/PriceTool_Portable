@@ -1,0 +1,33 @@
+﻿# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Portable runtime
+PriceTool_Portable/python/
+PriceTool_Portable/get-pip.py
+PriceTool_Portable/temp/
+PriceTool_Portable/logs/
+PriceTool_Portable/data/
+PriceTool_Portable/output/
+
+# Runtime data
+data/*.db
+logs/*
+output/*
+temp/
+
+# Large source files
+*.zip
+*.pdf
+*.xlsx
+*.xlsm
+*.xls
+
+# Keep folder placeholders
+!data/.gitkeep
+!logs/.gitkeep
+!output/.gitkeep
+!input/pdfs/.gitkeep
+!input/excels/.gitkeep
