@@ -10,6 +10,13 @@ UK Order 价格查询工具 - 使用说明
 
 如果工具已经在运行，再次双击“启动工具.bat”不会重复启动，会直接打开页面。
 
+如果某台电脑打开中文 .bat 文件时出现乱码或命令错误，请改用英文入口：
+
+start_tool.cmd      启动工具
+stop_tool.cmd       关闭工具
+restart_tool.cmd    重启工具
+open_page.cmd       打开页面
+
 
 二、日常怎么关闭
 

@@ -1,5 +1,4 @@
 @echo off
-chcp 65001 >nul
 set "BASE_DIR=%~dp0"
 cd /d "%BASE_DIR%"
 
@@ -7,9 +6,9 @@ if /I "%~1"=="/silent" goto CLOSE
 
 echo.
 echo ========================================
-echo  UK Order 价格查询工具
+echo  UK Order Price Tool
 echo ========================================
-echo 正在关闭本地服务，请稍候...
+echo Stopping the local tool. Please wait...
 echo.
 
 :CLOSE
@@ -38,9 +37,9 @@ if "%CLOSED%"=="0" (
 if /I "%~1"=="/silent" exit /b 0
 
 if "%CLOSED%"=="1" (
-  echo 工具已关闭，可以安全关闭这个窗口。
+  echo Tool stopped. You can close this window.
 ) else (
-  echo 没有发现正在运行的工具；如果页面仍能打开，请稍后再试一次。
+  echo No running tool process was found.
 )
 echo.
 pause

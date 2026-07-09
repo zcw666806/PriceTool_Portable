@@ -49,6 +49,8 @@ def main() -> None:
 
     if "pdf_folder" not in st.session_state:
         st.session_state["pdf_folder"] = default_pdf
+    if "pdf_folder_manual" not in st.session_state:
+        st.session_state["pdf_folder_manual"] = st.session_state["pdf_folder"]
     if "last_filters" not in st.session_state:
         st.session_state["last_filters"] = {}
 
@@ -88,17 +90,18 @@ def render_import_tab() -> None:
                 selected = choose_pdf_folder(st.session_state["pdf_folder"])
                 if selected:
                     st.session_state["pdf_folder"] = selected
+                    st.session_state["pdf_folder_manual"] = selected
                     st.rerun()
 
         with st.expander("无法弹出选择窗口时，手动输入路径", expanded=False):
             manual_pdf_folder = st.text_input(
                 "PDF 文件夹路径",
-                value=st.session_state["pdf_folder"],
                 key="pdf_folder_manual",
                 help="例如：C:\\other\\UK_Order\\FOB 2026 JULY PRICE LIST",
             )
             if st.button("应用手动路径", use_container_width=True):
                 st.session_state["pdf_folder"] = manual_pdf_folder
+                st.session_state["pdf_folder_manual"] = manual_pdf_folder
                 st.rerun()
 
         uploaded_excels = st.file_uploader(

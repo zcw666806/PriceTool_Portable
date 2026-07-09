@@ -12,10 +12,10 @@ xcopy "%BASE_DIR%config" "%TARGET%\config" /E /I /Y
 xcopy "%BASE_DIR%.streamlit" "%TARGET%\.streamlit" /E /I /Y
 mkdir "%TARGET%\data" "%TARGET%\output" "%TARGET%\logs" "%TARGET%\temp"
 copy "%BASE_DIR%launcher.py" "%TARGET%\launcher.py"
-copy "%BASE_DIR%启动工具.bat" "%TARGET%\启动工具.bat"
-copy "%BASE_DIR%关闭工具.bat" "%TARGET%\关闭工具.bat"
-copy "%BASE_DIR%重启工具.bat" "%TARGET%\重启工具.bat"
-copy "%BASE_DIR%打开页面.bat" "%TARGET%\打开页面.bat"
+copy "%BASE_DIR%start_tool.cmd" "%TARGET%\start_tool.cmd"
+copy "%BASE_DIR%stop_tool.cmd" "%TARGET%\stop_tool.cmd"
+copy "%BASE_DIR%restart_tool.cmd" "%TARGET%\restart_tool.cmd"
+copy "%BASE_DIR%open_page.cmd" "%TARGET%\open_page.cmd"
 copy "%BASE_DIR%requirements-portable.txt" "%TARGET%\requirements-portable.txt"
 copy "%BASE_DIR%README_使用说明.txt" "%TARGET%\README_使用说明.txt"
 
