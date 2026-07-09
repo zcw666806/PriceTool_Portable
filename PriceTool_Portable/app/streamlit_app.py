@@ -89,11 +89,14 @@ def render_import_tab() -> None:
                     st.rerun()
 
         with st.expander("手动输入路径（备用）", expanded=False):
-            st.session_state["pdf_folder"] = st.text_input(
+            manual_pdf_folder = st.text_input(
                 "PDF 文件夹路径",
                 value=st.session_state["pdf_folder"],
                 key="pdf_folder_manual",
             )
+            if st.button("应用手动路径", use_container_width=True):
+                st.session_state["pdf_folder"] = manual_pdf_folder
+                st.rerun()
 
         uploaded_excels = st.file_uploader(
             "可选 Excel 文件",
